@@ -43,7 +43,8 @@ import okhttp3.Response;
 
 public class Group extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
     String cookiestring;
-    String url = "https://ku-control.com/rest/items";
+    String url;
+//    String url = "https://ku-control.com/rest/items";
     Response response;
 
     SwipeRefreshLayout swipeRefreshLayout;
@@ -59,79 +60,82 @@ public class Group extends AppCompatActivity implements SwipeRefreshLayout.OnRef
         Intent intent = getIntent();
         swipeRefreshLayout = findViewById(R.id.ref1);
         String selectedsitemap = intent.getStringExtra("SelectedSitemap");
-        cookiestring = retreivecookies();
-        String[]temp = cookiestring.split(":");
-        swipeRefreshLayout= findViewById(R.id.ref1);
-        progressBar = findViewById(R.id.progressbar3);
-        progressBar.setVisibility(View.VISIBLE);
-        final Cookie cookie = new Cookie.Builder()
-                .domain(temp[2])
-                .path(temp[3])
-                .name(temp[0])
-                .value(temp[1])
-                .httpOnly()
-                .build();
-        final OkHttpClient client = new OkHttpClient.Builder()
-                .cookieJar(new CookieJar() {
-                    @Override
-                    public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
-                    }
-
-                    @Override
-                    public List<Cookie> loadForRequest(HttpUrl url) {
-                        final ArrayList<Cookie> oneCookie = new ArrayList<>(1);
-                        oneCookie.add(cookie);
-                        return oneCookie;
-                    }
-                })
-                .build();
-        final Request request= new Request.Builder()
-                .url(url)
-                .addHeader("Accept", "application/json")
-                .build();
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                progressBar.setVisibility(View.GONE);
-                e.printStackTrace();
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                final String temp = response.body().string();
-                Group.this.runOnUiThread(new Runnable() {
-                    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-                    @Override
-                    public void run() {
-                        progressBar.setVisibility(View.GONE);
-                        try {
-                            jsonArray = new JSONArray(temp);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+        url = intent.getStringExtra("url");
+        if(url.contains("ku-control")) {
+            url = "https://ku-control.com/rest/items";
+            cookiestring = retreivecookies();
+            String[] temp = cookiestring.split(":");
+            swipeRefreshLayout = findViewById(R.id.ref1);
+            progressBar = findViewById(R.id.progressbar3);
+            progressBar.setVisibility(View.VISIBLE);
+            final Cookie cookie = new Cookie.Builder()
+                    .domain(temp[2])
+                    .path(temp[3])
+                    .name(temp[0])
+                    .value(temp[1])
+                    .httpOnly()
+                    .build();
+            final OkHttpClient client = new OkHttpClient.Builder()
+                    .cookieJar(new CookieJar() {
+                        @Override
+                        public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
                         }
-                        JSONArray jsonArraytemp = new JSONArray();
-                        JSONObject jsontemp;
-                        for(int i=0; i<jsonArray.length(); i++){
+
+                        @Override
+                        public List<Cookie> loadForRequest(HttpUrl url) {
+                            final ArrayList<Cookie> oneCookie = new ArrayList<>(1);
+                            oneCookie.add(cookie);
+                            return oneCookie;
+                        }
+                    })
+                    .build();
+            final Request request = new Request.Builder()
+                    .url(url)
+                    .addHeader("Accept", "application/json")
+                    .build();
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    progressBar.setVisibility(View.GONE);
+                    e.printStackTrace();
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    final String temp = response.body().string();
+                    Group.this.runOnUiThread(new Runnable() {
+                        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+                        @Override
+                        public void run() {
+                            progressBar.setVisibility(View.GONE);
                             try {
-                                if(i==0){
-                                    continue;
-                                }else {
-                                    jsontemp = jsonArray.getJSONObject(i);
-                                    if (jsontemp.getString("type").equals("Group")) {
-                                        jsonArraytemp.put(jsontemp);
-                                    } else {
-                                        continue;
-                                    }
-                                }
+                                jsonArray = new JSONArray(temp);
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
+                            JSONArray jsonArraytemp = new JSONArray();
+                            JSONObject jsontemp;
+                            for (int i = 0; i < jsonArray.length(); i++) {
+                                try {
+                                    if (i == 0) {
+                                        continue;
+                                    } else {
+                                        jsontemp = jsonArray.getJSONObject(i);
+                                        if (jsontemp.getString("type").equals("Group")) {
+                                            jsonArraytemp.put(jsontemp);
+                                        } else {
+                                            continue;
+                                        }
+                                    }
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            Listview(jsonArraytemp);
                         }
-                        Listview(jsonArraytemp);
-                    }
-                });
-            }
-        });
+                    });
+                }
+            });
 
             swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
                 @Override
@@ -158,11 +162,11 @@ public class Group extends AppCompatActivity implements SwipeRefreshLayout.OnRef
                                     }
                                     JSONArray jsonArraytemp = new JSONArray();
                                     JSONObject jsontemp;
-                                    for(int i=0; i<jsonArray.length(); i++){
+                                    for (int i = 0; i < jsonArray.length(); i++) {
                                         try {
-                                            if(i==0){
+                                            if (i == 0) {
                                                 continue;
-                                            }else {
+                                            } else {
                                                 jsontemp = jsonArray.getJSONObject(i);
                                                 if (jsontemp.getString("type").equals("Group")) {
                                                     jsonArraytemp.put(jsontemp);
@@ -189,7 +193,117 @@ public class Group extends AppCompatActivity implements SwipeRefreshLayout.OnRef
             });
 
 //        response = Httpcommunication.getResponse1();
+        }else{
+            url=url.replace("sitemaps","items");
+            Log.d("servicediscovery", "group:"+url);
+            swipeRefreshLayout = findViewById(R.id.ref1);
+            progressBar = findViewById(R.id.progressbar3);
+            progressBar.setVisibility(View.VISIBLE);
+            final OkHttpClient client = new OkHttpClient.Builder()
+                    .build();
+            final Request request = new Request.Builder()
+                    .url(url)
+                    .addHeader("Accept", "application/json")
+                    .build();
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    progressBar.setVisibility(View.GONE);
+                    e.printStackTrace();
+                }
 
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    final String temp = response.body().string();
+                    Group.this.runOnUiThread(new Runnable() {
+                        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+                        @Override
+                        public void run() {
+                            progressBar.setVisibility(View.GONE);
+                            try {
+                                jsonArray = new JSONArray(temp);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                            JSONArray jsonArraytemp = new JSONArray();
+                            JSONObject jsontemp;
+                            for (int i = 0; i < jsonArray.length(); i++) {
+                                try {
+                                    if (i == 0) {
+                                        continue;
+                                    } else {
+                                        jsontemp = jsonArray.getJSONObject(i);
+                                        if (jsontemp.getString("type").equals("Group")) {
+                                            jsonArraytemp.put(jsontemp);
+                                        } else {
+                                            continue;
+                                        }
+                                    }
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            Listview(jsonArraytemp);
+                        }
+                    });
+                }
+            });
+
+            swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    client.newCall(request).enqueue(new Callback() {
+                        @Override
+                        public void onFailure(Call call, IOException e) {
+                            progressBar.setVisibility(View.GONE);
+                            e.printStackTrace();
+                        }
+
+                        @Override
+                        public void onResponse(Call call, Response response) throws IOException {
+                            final String temp = response.body().string();
+                            Group.this.runOnUiThread(new Runnable() {
+                                @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+                                @Override
+                                public void run() {
+                                    progressBar.setVisibility(View.GONE);
+                                    try {
+                                        jsonArray = new JSONArray(temp);
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                    JSONArray jsonArraytemp = new JSONArray();
+                                    JSONObject jsontemp;
+                                    for (int i = 0; i < jsonArray.length(); i++) {
+                                        try {
+                                            if (i == 0) {
+                                                continue;
+                                            } else {
+                                                jsontemp = jsonArray.getJSONObject(i);
+                                                if (jsontemp.getString("type").equals("Group")) {
+                                                    jsonArraytemp.put(jsontemp);
+                                                } else {
+                                                    continue;
+                                                }
+                                            }
+                                        } catch (JSONException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                    Listview(jsonArraytemp);
+                                }
+                            });
+                        }
+                    });
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
+                    }, 5000);
+                }
+            });
+        }
     }
 
     public String retreivecookies(){
@@ -252,6 +366,7 @@ public class Group extends AppCompatActivity implements SwipeRefreshLayout.OnRef
                     selectedgroup = groupname[position];
                     Intent intent = new Intent(Group.this, Items.class);
                     intent.putExtra("SelectedGroup", selectedgroup);
+                    intent.putExtra("url",url);
                     startActivity(intent);
                 }
             });
@@ -270,54 +385,59 @@ public class Group extends AppCompatActivity implements SwipeRefreshLayout.OnRef
         return true;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.logout){
-            String[]temp = cookiestring.split(":");
-            final Cookie cookie = new Cookie.Builder()
-                    .domain(temp[2])
-                    .path(temp[3])
-                    .name(temp[0])
-                    .value(temp[1])
-                    .httpOnly()
-                    .build();
+            if(url.contains("ku-control")) {
+                String[] temp = cookiestring.split(":");
+                final Cookie cookie = new Cookie.Builder()
+                        .domain(temp[2])
+                        .path(temp[3])
+                        .name(temp[0])
+                        .value(temp[1])
+                        .httpOnly()
+                        .build();
 
-            OkHttpClient client = new OkHttpClient.Builder()
-                    .cookieJar(new CookieJar() {
-                        @Override
-                        public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
-                        }
+                OkHttpClient client = new OkHttpClient.Builder()
+                        .cookieJar(new CookieJar() {
+                            @Override
+                            public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
+                            }
 
-                        @Override
-                        public List<Cookie> loadForRequest(HttpUrl url) {
-                            final ArrayList<Cookie> oneCookie = new ArrayList<>(1);
-                            oneCookie.add(cookie);
-                            return oneCookie;
-                        }
-                    })
-                    .build();
-            String url = "https://ku-control.com/logout";
-            Request request= new Request.Builder()
-                    .url(url)
-                    .build();
-            client.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    e.printStackTrace();
-                }
+                            @Override
+                            public List<Cookie> loadForRequest(HttpUrl url) {
+                                final ArrayList<Cookie> oneCookie = new ArrayList<>(1);
+                                oneCookie.add(cookie);
+                                return oneCookie;
+                            }
+                        })
+                        .build();
+                String url = "https://ku-control.com/logout";
+                Request request = new Request.Builder()
+                        .url(url)
+                        .build();
+                client.newCall(request).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        e.printStackTrace();
+                    }
 
-                @Override
-                public void onResponse(Call call, Response response) throws IOException {
-                    Group.this.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Updatecookie();
-                            Intent intent = new Intent(Group.this, MainActivity.class);
-                            startActivity(intent);
-                        }
-                    });
-                }
-            });
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        Group.this.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Updatecookie();
+                                Intent intent = new Intent(Group.this, MainActivity.class);
+                                startActivity(intent);
+                            }
+                        });
+                    }
+                });
+            }else{
+                this.finishAffinity();
+            }
         }
         return super.onOptionsItemSelected(item);
     }

@@ -1,6 +1,7 @@
 package com.kucontrol.chase.kucontrol;
 
 import android.app.Activity;
+import android.app.Application;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Handler;
@@ -50,16 +51,21 @@ public class Sitemap extends AppCompatActivity {
     ProgressBar progressBar;
     SwipeRefreshLayout swipeRefreshLayout;
     TextView ErrorMessage;
+    String url;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sitemap);
-        progressBar = (ProgressBar)findViewById(R.id.pro);
+        Intent intent = getIntent();
+        url = intent.getStringExtra("url");
+        progressBar = (ProgressBar) findViewById(R.id.pro);
         ErrorMessage = findViewById(R.id.errorMessage);
         progressBar.setVisibility(View.VISIBLE);
+        if (url.contains("ku-control")) {
         cookiestring = retreivecookies();
-        String[]temp = cookiestring.split(":");
-        swipeRefreshLayout= findViewById(R.id.ref);
+        String[] temp = cookiestring.split(":");
+        swipeRefreshLayout = findViewById(R.id.ref);
         final Cookie cookie = new Cookie.Builder()
                 .domain(temp[2])
                 .path(temp[3])
@@ -82,9 +88,9 @@ public class Sitemap extends AppCompatActivity {
                     }
                 })
                 .build();
-        String url = "https://ku-control.com/rest/sitemaps";
+        url = "https://ku-control.com/rest/sitemaps";
 
-        final Request request= new Request.Builder()
+        final Request request = new Request.Builder()
                 .url(url)
                 .addHeader("Accept", "application/json")
                 .build();
@@ -104,28 +110,28 @@ public class Sitemap extends AppCompatActivity {
                         try {
                             progressBar.setVisibility(View.GONE);
 
-                            if(output.equals("Unauthorized")){
+                            if (output.equals("Unauthorized")) {
                                 Updatecookie();
                                 Intent intent = new Intent(Sitemap.this, MainActivity.class);
                                 startActivity(intent);
-                            }else {
+                            } else {
                                 if (output.equals("Your KuControl gateway is offline")) {
                                     ErrorMessage.setVisibility(View.VISIBLE);
                                     ErrorMessage.setText("Kucontrol gateway offline");
-                                }else{
+                                } else {
                                     ErrorMessage.setVisibility(View.GONE);
-                                jsonArray = new JSONArray(output);
-                                JSONObject jsonObject;
-                                for (int i = 0; i < jsonArray.length(); i++) {
-                                    jsonObject = jsonArray.getJSONObject(i);
-                                    if (jsonObject.getString("name").equals("_default")) {
-                                        jsonArray.remove(i);
-                                    } else {
-                                        continue;
+                                    jsonArray = new JSONArray(output);
+                                    JSONObject jsonObject;
+                                    for (int i = 0; i < jsonArray.length(); i++) {
+                                        jsonObject = jsonArray.getJSONObject(i);
+                                        if (jsonObject.getString("name").equals("_default")) {
+                                            jsonArray.remove(i);
+                                        } else {
+                                            continue;
+                                        }
                                     }
+                                    Listview(jsonArray);
                                 }
-                                Listview(jsonArray);
-                            }
                             }
 
                         } catch (JSONException e) {
@@ -154,28 +160,28 @@ public class Sitemap extends AppCompatActivity {
                             public void run() {
                                 try {
                                     progressBar.setVisibility(View.GONE);
-                                    if(output.equals("Unauthorized")){
+                                    if (output.equals("Unauthorized")) {
                                         Updatecookie();
                                         Intent intent = new Intent(Sitemap.this, MainActivity.class);
                                         startActivity(intent);
-                                    }else {
+                                    } else {
                                         if (output.equals("Your KuControl gateway is offline")) {
                                             ErrorMessage.setVisibility(View.VISIBLE);
                                             ErrorMessage.setText("Kucontrol gateway offline");
-                                        }else{
+                                        } else {
                                             ErrorMessage.setVisibility(View.GONE);
-                                        jsonArray = new JSONArray(output);
-                                        JSONObject jsonObject;
-                                        for (int i = 0; i < jsonArray.length(); i++) {
-                                            jsonObject = jsonArray.getJSONObject(i);
-                                            if (jsonObject.getString("name").equals("_default")) {
-                                                jsonArray.remove(i);
-                                            } else {
-                                                continue;
+                                            jsonArray = new JSONArray(output);
+                                            JSONObject jsonObject;
+                                            for (int i = 0; i < jsonArray.length(); i++) {
+                                                jsonObject = jsonArray.getJSONObject(i);
+                                                if (jsonObject.getString("name").equals("_default")) {
+                                                    jsonArray.remove(i);
+                                                } else {
+                                                    continue;
+                                                }
                                             }
+                                            Listview(jsonArray);
                                         }
-                                        Listview(jsonArray);
-                                    }
                                     }
 
                                 } catch (JSONException e) {
@@ -194,7 +200,125 @@ public class Sitemap extends AppCompatActivity {
                 }, 5000);
             }
         });
+    }else{
+            swipeRefreshLayout = findViewById(R.id.ref);
+            final OkHttpClient client = new OkHttpClient.Builder()
+                    .build();
+            url = "http://"+url+":8080/rest/sitemaps";
+
+            final Request request = new Request.Builder()
+                    .url(url)
+                    .addHeader("Accept", "application/json")
+                    .build();
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    e.printStackTrace();
+                }
+
+                @Override
+                public void onResponse(Call call, final Response response) throws IOException {
+                    final String output = response.body().string();
+                    Sitemap.this.runOnUiThread(new Runnable() {
+                        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+                        @Override
+                        public void run() {
+                            try {
+                                progressBar.setVisibility(View.GONE);
+
+                                if (output.equals("Unauthorized")) {
+                                    Updatecookie();
+                                    Intent intent = new Intent(Sitemap.this, MainActivity.class);
+                                    startActivity(intent);
+                                } else {
+                                    if (output.equals("Your KuControl gateway is offline")) {
+                                        ErrorMessage.setVisibility(View.VISIBLE);
+                                        ErrorMessage.setText("Kucontrol gateway offline");
+                                    } else {
+                                        ErrorMessage.setVisibility(View.GONE);
+                                        jsonArray = new JSONArray(output);
+                                        JSONObject jsonObject;
+                                        for (int i = 0; i < jsonArray.length(); i++) {
+                                            jsonObject = jsonArray.getJSONObject(i);
+                                            if (jsonObject.getString("name").equals("_default")) {
+                                                jsonArray.remove(i);
+                                            } else {
+                                                continue;
+                                            }
+                                        }
+                                        Listview(jsonArray);
+                                    }
+                                }
+
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+
+                }
+            });
+            swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    client.newCall(request).enqueue(new Callback() {
+                        @Override
+                        public void onFailure(Call call, IOException e) {
+                            e.printStackTrace();
+                        }
+
+                        @Override
+                        public void onResponse(Call call, final Response response) throws IOException {
+                            final String output = response.body().string();
+                            Sitemap.this.runOnUiThread(new Runnable() {
+                                @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+                                @Override
+                                public void run() {
+                                    try {
+                                        progressBar.setVisibility(View.GONE);
+                                        if (output.equals("Unauthorized")) {
+                                            Updatecookie();
+                                            Intent intent = new Intent(Sitemap.this, MainActivity.class);
+                                            startActivity(intent);
+                                        } else {
+                                            if (output.equals("Your KuControl gateway is offline")) {
+                                                ErrorMessage.setVisibility(View.VISIBLE);
+                                                ErrorMessage.setText("Kucontrol gateway offline");
+                                            } else {
+                                                ErrorMessage.setVisibility(View.GONE);
+                                                jsonArray = new JSONArray(output);
+                                                JSONObject jsonObject;
+                                                for (int i = 0; i < jsonArray.length(); i++) {
+                                                    jsonObject = jsonArray.getJSONObject(i);
+                                                    if (jsonObject.getString("name").equals("_default")) {
+                                                        jsonArray.remove(i);
+                                                    } else {
+                                                        continue;
+                                                    }
+                                                }
+                                                Listview(jsonArray);
+                                            }
+                                        }
+
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            });
+
+                        }
+                    });
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
+                    }, 5000);
+                }
+            });
     }
+
+}
 
     public String retreivecookies(){
         FileInputStream fis;
@@ -262,6 +386,7 @@ public class Sitemap extends AppCompatActivity {
                         selectedsitemap = sitemapname[position];
                         Intent intent = new Intent(Sitemap.this, Group.class);
                         intent.putExtra("SelectedSitemap", selectedsitemap);
+                        intent.putExtra("url",url);
                         startActivity(intent);
                 }
             });
@@ -276,36 +401,38 @@ public class Sitemap extends AppCompatActivity {
         return true;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.logout){
-            String[]temp = cookiestring.split(":");
-            final Cookie cookie = new Cookie.Builder()
-                    .domain(temp[2])
-                    .path(temp[3])
-                    .name(temp[0])
-                    .value(temp[1])
-                    .httpOnly()
-                    .build();
+            if(url.contains("ku-control")) {
+                String[] temp = cookiestring.split(":");
+                final Cookie cookie = new Cookie.Builder()
+                        .domain(temp[2])
+                        .path(temp[3])
+                        .name(temp[0])
+                        .value(temp[1])
+                        .httpOnly()
+                        .build();
 
-            OkHttpClient client = new OkHttpClient.Builder()
-                    .cookieJar(new CookieJar() {
-                        @Override
-                        public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
-                        }
+                OkHttpClient client = new OkHttpClient.Builder()
+                        .cookieJar(new CookieJar() {
+                            @Override
+                            public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
+                            }
 
-                        @Override
-                        public List<Cookie> loadForRequest(HttpUrl url) {
-                            final ArrayList<Cookie> oneCookie = new ArrayList<>(1);
-                            oneCookie.add(cookie);
-                            return oneCookie;
-                        }
-                    })
-                    .build();
-            String url = "https://ku-control.com/logout";
-            Request request= new Request.Builder()
-                    .url(url)
-                    .build();
+                            @Override
+                            public List<Cookie> loadForRequest(HttpUrl url) {
+                                final ArrayList<Cookie> oneCookie = new ArrayList<>(1);
+                                oneCookie.add(cookie);
+                                return oneCookie;
+                            }
+                        })
+                        .build();
+                String url = "https://ku-control.com/logout";
+                Request request = new Request.Builder()
+                        .url(url)
+                        .build();
                 client.newCall(request).enqueue(new Callback() {
                     @Override
                     public void onFailure(Call call, IOException e) {
@@ -324,6 +451,9 @@ public class Sitemap extends AppCompatActivity {
                         });
                     }
                 });
+            }else{
+                this.finishAffinity();
+            }
         }
         return super.onOptionsItemSelected(item);
     }

@@ -1,22 +1,18 @@
 package com.kucontrol.chase.kucontrol;
 
-import android.Manifest;
-import android.app.Activity;
-import android.content.DialogInterface;
+
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.os.Environment;
+
+import android.net.nsd.NsdManager;
+import android.net.nsd.NsdServiceInfo;
+import android.os.Build;
 import android.os.Handler;
-import android.os.Parcelable;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
 import android.text.TextUtils;
+
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -26,14 +22,14 @@ import android.widget.TextView;
 
 
 import java.io.BufferedReader;
-import java.io.File;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import java.io.Serializable;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,8 +47,6 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-import static android.Manifest.permission_group.CAMERA;
-import static java.security.AccessController.getContext;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -64,16 +58,19 @@ public class MainActivity extends AppCompatActivity {
     int flag;
     CardView Login;
 
-
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         final String[] User = new String[1];
         final String[] Passwd = new String[1];
         final String[] token = new String[1];
         token[0] = "";
+        final String[] localurl = new String[1];
         final String url = "https://ku-control.com/login";
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        NSD nsd = new NSD(this);
+        nsd.discoverServices();
         username = (EditText) findViewById(R.id.Username);
         password = (EditText) findViewById(R.id.Password);
         Login = (CardView) findViewById(R.id.Login);
@@ -82,7 +79,26 @@ public class MainActivity extends AppCompatActivity {
         register = (TextView) findViewById(R.id.Register);
         String credentials = null;
         String Cookies = "";
+        final GlobalClass globalClass = (GlobalClass) getApplicationContext();
+        progressBar.setVisibility(View.VISIBLE);
+        final Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // Do something after 5s = 5000ms
+                localurl[0] = globalClass.getUrl();
+                progressBar.setVisibility(View.GONE);
+                if (localurl[0]==null) {
+                }else{
+                Log.d("servicediscovery", "run: "+ localurl[0]);
+                Intent intent = new Intent(MainActivity.this, Sitemap.class);
+                intent.putExtra("url", localurl[0]);
+                startActivity(intent);
+            }
+            }
+        }, 5000);
 
+            Log.d("servicediscovery", "run:if "+ localurl[0]);
         final OkHttpClient client = new OkHttpClient.Builder()
                 .cookieJar(new CookieJar() {
 
@@ -101,6 +117,7 @@ public class MainActivity extends AppCompatActivity {
         Cookies = retreivecookies();
         if (!(Cookies.equals(""))) {
             Intent intent = new Intent(MainActivity.this, Sitemap.class);
+            intent.putExtra("url", url);
             startActivity(intent);
         } else {
             //get request
@@ -171,6 +188,7 @@ public class MainActivity extends AppCompatActivity {
                                                 progressBar.setVisibility(View.GONE);
                                                 Storecookie(cookieStore);
                                                 Intent intent = new Intent(MainActivity.this, Sitemap.class);
+                                                intent.putExtra("url", url);
                                                 startActivity(intent);
 
                                             }
@@ -197,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
     }
     public String retreivetoken(String html){
         String token = "";
