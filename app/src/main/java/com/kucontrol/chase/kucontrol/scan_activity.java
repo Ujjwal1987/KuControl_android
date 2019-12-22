@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.google.zxing.Result;
 
@@ -45,7 +46,7 @@ public class scan_activity extends AppCompatActivity implements ZXingScannerView
 
     public void handleResult(Result rawResult) {
         // Do something with the result here
-        // Log.v("tag", rawResult.getText()); // Prints scan results
+        // Log.v("tag1", rawResult.getText()); // Prints scan results
         // Log.v("tag", rawResult.getBarcodeFormat().toString()); // Prints the scan format (qrcode, pdf417 etc.)
 
         /*Register register = new Register();

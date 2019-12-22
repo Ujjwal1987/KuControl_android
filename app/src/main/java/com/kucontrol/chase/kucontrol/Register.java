@@ -52,11 +52,11 @@ import static android.app.PendingIntent.getActivity;
 public class Register extends AppCompatActivity {
     EditText email,password,retypepassword;
     CardView scan,register;
-    String username= null, password1= null, password2 = null, uuid = null, secret = null, Cookies = "", token = "";
+    String username= null, password1= null, password2 = null, uuid = "", secret = "", Cookies = "", token = "";
     private HashMap<String, List<Cookie>> cookieStore = new HashMap<>();
     TextView scanresult;
     String searchstring = "<input type=\"hidden\" name=\"_csrf\" value=";
-    String url = "https://www.ku-control.com/";
+    String url = "https://ku-control.com/";
     private static final int PERMISSION_REQUEST_CODE = 200;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -154,6 +154,7 @@ public class Register extends AppCompatActivity {
                     });
                 }
             });
+
             register.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -179,7 +180,9 @@ public class Register extends AppCompatActivity {
                                 .add("openhabsecret", secret)
                                 .add("agree", "on")
                                 .build();
-
+                        Log.v("tag1", uuid);
+                        Log.v("tag1", secret);
+                        Log.v("tag1", token);
                         Request postrequest = new Request.Builder()
                                 .url("https://ku-control.com/register")
                                 .post(requestBody)
@@ -252,7 +255,7 @@ public class Register extends AppCompatActivity {
     }
 
     public void Storecookie(HashMap<String, List<Cookie>> cookieStore){
-        HttpUrl url = HttpUrl.parse("https://www.ku-control.com/");
+        HttpUrl url = HttpUrl.parse("https://ku-control.com/");
         List<Cookie> cookies = cookieStore.get(url.host());
         Cookie tempcookies;
         FileOutputStream fos;
