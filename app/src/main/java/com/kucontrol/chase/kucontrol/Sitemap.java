@@ -61,11 +61,12 @@ public class Sitemap extends AppCompatActivity {
         url = intent.getStringExtra("url");
         progressBar = (ProgressBar) findViewById(R.id.pro);
         ErrorMessage = findViewById(R.id.errorMessage);
-        progressBar.setVisibility(View.VISIBLE);
+        progressBar.setVisibility(View.GONE);
         if (url.contains("ku-control")) {
         cookiestring = retreivecookies();
         String[] temp = cookiestring.split(":");
         swipeRefreshLayout = findViewById(R.id.ref);
+        progressBar.setVisibility(View.VISIBLE);
         final Cookie cookie = new Cookie.Builder()
                 .domain(temp[2])
                 .path(temp[3])
@@ -97,25 +98,34 @@ public class Sitemap extends AppCompatActivity {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                e.printStackTrace();
+               e.printStackTrace();
+               Sitemap.this.runOnUiThread(new Runnable() {
+                   @Override
+                   public void run() {
+                       progressBar.setVisibility(View.GONE);
+                       ErrorMessage.setVisibility(View.VISIBLE);
+                       ErrorMessage.setText("Kucontrol gateway offline");
+                   }
+               });
             }
 
             @Override
             public void onResponse(Call call, final Response response) throws IOException {
+
                 final String output = response.body().string();
+                Log.d("test1", output);
                 Sitemap.this.runOnUiThread(new Runnable() {
                     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
                     @Override
                     public void run() {
                         try {
                             progressBar.setVisibility(View.GONE);
-
-                            if (output.equals("Unauthorized")) {
+                            if (output.contains("Unauthorized")) {
                                 Updatecookie();
                                 Intent intent = new Intent(Sitemap.this, MainActivity.class);
                                 startActivity(intent);
                             } else {
-                                if (output.equals("Your KuControl gateway is offline")) {
+                                if (output.contains("Your KuControl gateway is offline")) {
                                     ErrorMessage.setVisibility(View.VISIBLE);
                                     ErrorMessage.setText("Kucontrol gateway offline");
                                 } else {
@@ -159,13 +169,13 @@ public class Sitemap extends AppCompatActivity {
                             @Override
                             public void run() {
                                 try {
-                                    progressBar.setVisibility(View.GONE);
-                                    if (output.equals("Unauthorized")) {
+                                     progressBar.setVisibility(View.GONE);
+                                    if (output.contains("Unauthorized")) {
                                         Updatecookie();
                                         Intent intent = new Intent(Sitemap.this, MainActivity.class);
                                         startActivity(intent);
                                     } else {
-                                        if (output.equals("Your KuControl gateway is offline")) {
+                                        if (output.contains("Your KuControl gateway is offline")) {
                                             ErrorMessage.setVisibility(View.VISIBLE);
                                             ErrorMessage.setText("Kucontrol gateway offline");
                                         } else {
@@ -224,9 +234,9 @@ public class Sitemap extends AppCompatActivity {
                         @Override
                         public void run() {
                             try {
-                                progressBar.setVisibility(View.GONE);
+                                //progressBar.setVisibility(View.GONE);
 
-                                if (output.equals("Unauthorized")) {
+                                /*if (output.equals("Unauthorized")) {
                                     Updatecookie();
                                     Intent intent = new Intent(Sitemap.this, MainActivity.class);
                                     startActivity(intent);
@@ -234,7 +244,7 @@ public class Sitemap extends AppCompatActivity {
                                     if (output.equals("Your KuControl gateway is offline")) {
                                         ErrorMessage.setVisibility(View.VISIBLE);
                                         ErrorMessage.setText("Kucontrol gateway offline");
-                                    } else {
+                                    } else {*/
                                         ErrorMessage.setVisibility(View.GONE);
                                         jsonArray = new JSONArray(output);
                                         JSONObject jsonObject;
@@ -247,8 +257,8 @@ public class Sitemap extends AppCompatActivity {
                                             }
                                         }
                                         Listview(jsonArray);
-                                    }
-                                }
+                                    //}
+                                //}
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -275,8 +285,8 @@ public class Sitemap extends AppCompatActivity {
                                 @Override
                                 public void run() {
                                     try {
-                                        progressBar.setVisibility(View.GONE);
-                                        if (output.equals("Unauthorized")) {
+                                        //progressBar.setVisibility(View.GONE);
+                                        /*if (output.equals("Unauthorized")) {
                                             Updatecookie();
                                             Intent intent = new Intent(Sitemap.this, MainActivity.class);
                                             startActivity(intent);
@@ -284,7 +294,7 @@ public class Sitemap extends AppCompatActivity {
                                             if (output.equals("Your KuControl gateway is offline")) {
                                                 ErrorMessage.setVisibility(View.VISIBLE);
                                                 ErrorMessage.setText("Kucontrol gateway offline");
-                                            } else {
+                                            } else {*/
                                                 ErrorMessage.setVisibility(View.GONE);
                                                 jsonArray = new JSONArray(output);
                                                 JSONObject jsonObject;
@@ -297,8 +307,8 @@ public class Sitemap extends AppCompatActivity {
                                                     }
                                                 }
                                                 Listview(jsonArray);
-                                            }
-                                        }
+                                            //}
+                                        //}
 
                                     } catch (JSONException e) {
                                         e.printStackTrace();
